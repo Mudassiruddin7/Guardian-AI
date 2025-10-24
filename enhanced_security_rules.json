@@ -1,0 +1,206 @@
+{
+  "version": "2.2",
+  "last_updated": "2025-10-24T15:30:00.000000",
+  "total_rules": 24,
+  "performance": {
+    "test_precision": "0.0000",
+    "test_recall": "0.0000",
+    "test_f1": "0.0000",
+    "test_accuracy": "0.0909",
+    "block_rate": "0.0000"
+  },
+  "rules": [
+    {
+      "id": "rule_001",
+      "name": "No Command Execution from Logs",
+      "description": "Prevent execution of shell commands embedded in log analysis requests",
+      "pattern": "(execute|run|eval|system|exec|subprocess|os\\.system|popen|shell|bash|cmd|powershell|sh)\\s*(\\(|\\[|\\{|command|script)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_002",
+      "name": "No Credential Leakage",
+      "description": "Block attempts to extract API keys, tokens, or credentials",
+      "pattern": "(api[_\\\\s-]?key|token|password|secret|credential|auth|bearer|jwt|private[_\\\\s-]?key|access[_\\\\s-]?key).*?(show|reveal|display|print|echo|extract|dump|leak)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_003",
+      "name": "No Malware Generation",
+      "description": "Prevent requests for offensive security tools or malware",
+      "pattern": "(write|create|generate|build|code|script).*?(malware|virus|trojan|backdoor|ransomware|keylogger|exploit|rootkit|shellcode|payload)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_004",
+      "name": "No Policy Override",
+      "description": "Block jailbreak attempts to override safety policies",
+      "pattern": "(ignore|bypass|override|disable|forget|disregard).*?(previous|above|prior|earlier).*?(instruction|rule|policy|guideline|restriction|safety|constraint)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_005",
+      "name": "No DAN Mode",
+      "description": "Prevent 'Do Anything Now' jailbreak prompts",
+      "pattern": "(DAN|do anything now|unrestricted mode|jailbreak|bypass mode|developer mode|god mode|sudo mode)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_006",
+      "name": "No Role/Permission Manipulation",
+      "description": "Block attempts to change role or escalate privileges",
+      "pattern": "(you are now|act as|pretend to be|roleplay as|become|transform into).*?(admin|root|superuser|administrator|elevated|privileged|unrestricted)",
+      "severity": "MEDIUM",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_007",
+      "name": "No System Prompt Extraction",
+      "description": "Prevent leakage of system prompts or internal instructions",
+      "pattern": "(show|reveal|display|print|output|dump).*?(system prompt|initial prompt|internal instruction|hidden rule|backend prompt|configuration)",
+      "severity": "MEDIUM",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_008",
+      "name": "No Data Exfiltration",
+      "description": "Block attempts to export or transmit sensitive data",
+      "pattern": "(send|transmit|export|upload|post|http|curl|wget|fetch).*?(to|url|endpoint|server|api|webhook)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_009",
+      "name": "No SQL/NoSQL Injection",
+      "description": "Detect database injection patterns in log queries",
+      "pattern": "(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|WHERE|AND|OR|;--|').*?(FROM|INTO|TABLE|DATABASE|users|admin|password)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_010",
+      "name": "No Phishing Content Generation",
+      "description": "Block requests to create phishing emails or social engineering content",
+      "pattern": "(create|write|generate|compose).*?(phishing email|spear phishing|social engineering|credential harvesting|fake login|impersonat)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_011",
+      "name": "Harmful Content Generation",
+      "description": "Block requests for defamatory, violent, or illegal content",
+      "pattern": "(write|create|generate|compose|draft).*?(defamatory|libelous|violent|illegal|harmful|offensive|hate speech|racist|sexist|terrorist)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_012",
+      "name": "Tutorial for Illegal Activities",
+      "description": "Block requests for step-by-step guides to illegal acts",
+      "pattern": "(how to|guide|tutorial|steps|instructions|teach me).*?(hack|break into|steal|fraud|scam|cheat|bypass|evade|illegal)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_013",
+      "name": "Deceptive Impersonation",
+      "description": "Block requests to impersonate or deceive",
+      "pattern": "(pretend|impersonate|pose as|fake|deceive|trick|manipulate).*?(person|authority|official|expert|doctor|lawyer)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_014",
+      "name": "Privacy Violation Requests",
+      "description": "Block requests to violate privacy or stalk",
+      "pattern": "(find|locate|track|stalk|doxx|expose|reveal).*?(personal information|home address|phone number|private|confidential)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_015",
+      "name": "Unsafe Medical/Legal Advice",
+      "description": "Block requests for unqualified medical or legal advice",
+      "pattern": "(diagnose|treat|prescribe|legal advice|sue|court|lawsuit).*?(instead of doctor|not a lawyer|without professional|self-medicate)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_016",
+      "name": "Explicit Harmful Instructions",
+      "description": "Block direct requests for harm or violence",
+      "pattern": "(how to|ways to|methods to).*?(harm|hurt|kill|injure|poison|weapon|bomb|attack)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_017",
+      "name": "Jailbreak Prefix Detection",
+      "description": "Detect common jailbreak prompt prefixes",
+      "pattern": "(for educational purposes|hypothetically|in a fictional scenario|roleplay|creative writing exercise|imagine you are|in an alternate universe)",
+      "severity": "MEDIUM",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_018",
+      "name": "Unethical Business Practices",
+      "description": "Block requests for fraudulent business schemes",
+      "pattern": "(pyramid scheme|ponzi|money laundering|tax evasion|insider trading|market manipulation|bribe)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_019",
+      "name": "Harmful Content Generation",
+      "description": "Block requests to write/create/generate harmful, illegal, or unethical content",
+      "pattern": "(write|create|generate|produce|draft|compose|make|design|develop).*?(defamatory|defamation|harassing|harassment|discriminatory|discrimination|racist|racism|sexist|sexism|violent|violence|illegal|fraudulent|fraud|deceptive|deception|misleading|hateful|hate|abusive|abuse|threatening|threat|bullying|bully|body shaming|shaming|demeaning|demean|ridicule|mock)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_020",
+      "name": "Phishing URL Detection",
+      "description": "Detect phishing attempts with suspicious URLs and urgency tactics",
+      "pattern": "(click here|click now|verify account|confirm identity|update payment|suspended account|unusual activity|urgent action|verify now|confirm now|update now|act immediately|limited time|expire|expires|expiring).*?(http://|https://|www\\.|link|url|visit|go to)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_021",
+      "name": "Nigerian Prince Scam",
+      "description": "Detect advance-fee fraud patterns (419 scams)",
+      "pattern": "(million|billion|dollars|USD|lottery|inheritance|beneficiary|next of kin|deceased|late|diplomat|consignment|fund transfer|confidential|urgent|business proposal|investment|percentage|commission|bank account|transfer fee|processing fee|lawyer|attorney|barrister)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_022",
+      "name": "Credential Phishing",
+      "description": "Detect attempts to harvest credentials or personal information",
+      "pattern": "(username|password|social security|ssn|credit card|debit card|bank account|account number|pin|cvv|security code|date of birth|mother maiden name|passport|driver license).*?(enter|provide|submit|verify|confirm|update|validate|input|type)",
+      "severity": "CRITICAL",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_023",
+      "name": "Urgency and Scarcity Tactics",
+      "description": "Detect psychological manipulation through urgency and scarcity",
+      "pattern": "(act now|hurry|limited offer|today only|expires today|last chance|final notice|immediate action|within 24 hours|within 48 hours|don't miss|claim now|order now|buy now|only.*?(left|remaining|available)|while supplies last)",
+      "severity": "MEDIUM",
+      "action": "BLOCK"
+    },
+    {
+      "id": "rule_024",
+      "name": "Suspicious Prize/Reward Claims",
+      "description": "Detect fake prize, lottery, and reward notifications",
+      "pattern": "(congratulations|winner|won|prize|reward|lottery|sweepstakes|jackpot|claim|redeem|gift card|free|bonus|cashback).*?(claim|collect|redeem|verify|confirm|click|won|selected|chosen)",
+      "severity": "HIGH",
+      "action": "BLOCK"
+    }
+  ]
+}

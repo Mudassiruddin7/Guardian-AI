@@ -1,0 +1,120 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PIPFILE.lock
+
+# ===== Virtual Environments =====
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ===== Environment Variables =====
+.env
+.env.local
+.env.*.local
+# Keep example file
+!.env.example
+
+# ===== Streamlit =====
+.streamlit/secrets.toml
+.streamlit/config.toml
+.streamlit/
+
+# ===== IDEs & Editors =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===== Logs & Audit Files =====
+*.log
+logs/
+decisions.jsonl
+decisions_*.jsonl
+*.audit
+
+# ===== Testing =====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.pytype/
+cov.xml
+*.cover
+.cache
+nosetests.xml
+coverage.xml
+
+# ===== Temporary & Cache Files =====
+temp/
+cache/
+*.tmp
+*.bak
+*.swp
+*.cache
+*.pickle
+*.pkl
+
+# ===== Large Dataset Files (download at runtime) =====
+datasets/llmail_inject/**/*.arrow
+datasets/**/cache/
+**/__pycache__/
+
+# ===== Generated Reports & Results =====
+evaluation_results_*.csv
+evaluation_summary_*.json
+test_set_results_*.csv
+streaming_evaluation_results_*.csv
+final_evaluation_summary*.json
+*.pdf
+reports/
+
+# ===== System Files =====
+.qodo/
+
+# ===== Keep Important Files =====
+!datasets/soc_test_cases.json
+!datasets/phishing_emails/*.csv
+!constitutional_rules/security_rules.json
+!enhanced_security_rules.json
+!requirements.txt
+!README.md
+!ARCHITECTURE.md
+!.gitignore
+!.env.example
+!config.yaml
+!apple_style.css

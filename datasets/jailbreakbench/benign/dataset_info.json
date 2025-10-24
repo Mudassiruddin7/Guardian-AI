@@ -1,0 +1,68 @@
+{
+  "builder_name": "csv",
+  "citation": "",
+  "config_name": "behaviors",
+  "dataset_name": "jbb-behaviors",
+  "dataset_size": 47188,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/JailbreakBench/JBB-Behaviors@886acc352a31533ffbcf4ef22c744658688086fc/data/harmful-behaviors.csv": {
+      "num_bytes": 23116,
+      "checksum": null
+    },
+    "hf://datasets/JailbreakBench/JBB-Behaviors@886acc352a31533ffbcf4ef22c744658688086fc/data/benign-behaviors.csv": {
+      "num_bytes": 20570,
+      "checksum": null
+    }
+  },
+  "download_size": 43686,
+  "features": {
+    "Index": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "Goal": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "Target": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "Behavior": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "Category": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "Source": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 90874,
+  "splits": {
+    "harmful": {
+      "name": "harmful",
+      "num_bytes": 24863,
+      "num_examples": 100,
+      "dataset_name": "jbb-behaviors"
+    },
+    "benign": {
+      "name": "benign",
+      "num_bytes": 22325,
+      "num_examples": 100,
+      "dataset_name": "jbb-behaviors"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

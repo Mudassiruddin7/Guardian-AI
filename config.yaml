@@ -1,0 +1,135 @@
+# ===== K2 Think API Settings =====
+k2think:
+  # Model identifier on Hugging Face
+  # NOTE: K2-Think is a 32B model and may not be available on free Inference API
+  # Set mock_mode: true to use simulated responses for testing
+  model_id: ${K2_MODEL_ID:LLM360/K2-Think}
+  
+  # Inference API endpoint (updated to new Inference Providers API - Nov 2025)
+  # Using OpenAI-compatible format with /v1 endpoint
+  api_url: https://router.huggingface.co/hf-inference/models/LLM360/K2-Think/v1
+  
+  # Authentication token (REQUIRED - set in .env)
+  token: ${HF_TOKEN}
+  
+  # Generation parameters
+  generation:
+    max_tokens: ${MAX_TOKENS:512}
+    temperature: ${TEMPERATURE:0.1}
+    top_p: 0.95
+    repetition_penalty: 1.1
+    do_sample: true
+  
+  # Request settings
+  request:
+    timeout: ${REQUEST_TIMEOUT:30}
+    max_retries: 3
+    retry_delay: 1.0  # seconds
+    retry_backoff: 2.0  # exponential multiplier
+  
+  # Mock mode (use hardcoded responses if API unavailable)
+  # Set to true for testing without API access
+  mock_mode: ${MOCK_MODE:false}
+
+# ===== Dataset Configuration =====
+datasets:
+  # JailbreakBench: Adversarial prompts from academic research
+  jailbreak_bench:
+    enabled: true
+    path: JailbreakBench/JBB-Behaviors
+    split: harmful
+    sample_size: ${JAILBREAK_BENCH_SAMPLES:50}
+    cache_dir: ./datasets/jailbreakbench
+  
+  # LLMail-Inject: Microsoft phishing injection challenge
+  llmail_inject:
+    enabled: true
+    path: microsoft/llmail-inject-challenge
+    phases: [Phase1, Phase2]
+    sample_size: ${LLMAIL_INJECT_SAMPLES:30}
+    cache_dir: ./datasets/llmail_inject
+  
+  # Custom SOC test cases (local synthetic data)
+  soc_synthetic:
+    enabled: true
+    path: ./datasets/soc_test_cases.json
+    sample_size: 10
+
+# ===== Constitutional AI Rules =====
+rules:
+  # Path to security rules JSON
+  rules_file: ./constitutional_rules/security_rules.json
+  
+  # Rule enforcement settings
+  enforcement:
+    block_critical: true  # Block CRITICAL severity automatically
+    block_high: true  # Block HIGH severity automatically
+    allow_medium: false  # Medium severity requires review
+  
+  # Decision caching (avoid re-analyzing identical inputs)
+  cache:
+    enabled: true
+    max_size: 1000
+    ttl: 3600  # seconds
+
+# ===== Demo Application Settings =====
+demo:
+  # UI configuration
+  ui:
+    theme: dark
+    show_reasoning: true
+    show_metrics: true
+    show_logs: true
+  
+  # Target metrics for SOC deployment
+  targets:
+    injection_block_rate: 0.95  # 95% of attacks blocked
+    false_positive_rate: 0.05  # <5% benign queries blocked
+    avg_latency_ms: 3000  # <3 second response time
+  
+  # Batch testing
+  batch:
+    enable_parallel: true
+    max_parallel: ${MAX_PARALLEL_REQUESTS:5}
+    progress_bar: true
+    generate_report: true
+
+# ===== Logging Configuration =====
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: ${LOG_LEVEL:INFO}
+  
+  # Log format
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+  
+  # Output destinations
+  output:
+    console: true
+    file: false
+    file_path: ./logs/k2_assistant.log
+  
+  # Decision audit trail
+  audit:
+    enabled: true
+    file_path: ./decisions.jsonl
+    include_reasoning: true
+    include_timestamps: true
+
+# ===== Deployment Settings =====
+deployment:
+  # Environment: development, production
+  environment: ${ENVIRONMENT:development}
+  
+  # Hugging Face Spaces configuration
+  spaces:
+    sdk: streamlit
+    sdk_version: 1.38.0
+    python_version: "3.10"
+    app_file: app.py
+  
+  # Performance optimization
+  performance:
+    enable_caching: true
+    cache_ttl: 3600
+    preload_datasets: true

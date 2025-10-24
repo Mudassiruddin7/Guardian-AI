@@ -1,0 +1,530 @@
+/* Apple-Inspired Clean Design System - Dark Theme */
+
+:root {
+    --sf-pro: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    
+    /* Primary Colors - Apple Blue */
+    --primary: #0A84FF;
+    --primary-hover: #409CFF;
+    
+    /* Status Colors - Vibrant but subtle */
+    --success: #30D158;
+    --danger: #FF453A;
+    --warning: #FFD60A;
+    
+    /* Background Colors - Dark Theme */
+    --background: #000000;
+    --surface: #1C1C1E;
+    --surface-elevated: #2C2C2E;
+    --surface-secondary: #3A3A3C;
+    
+    /* Text Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #98989D;
+    --text-tertiary: #636366;
+    
+    /* Border & Divider */
+    --border: #38383A;
+    --divider: #48484A;
+    
+    /* Shadows */
+    --shadow: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-elevated: 0 8px 32px rgba(0,0,0,0.6);
+    
+    /* Border Radius */
+    --radius: 12px;
+    --radius-large: 16px;
+    
+    /* Chart Colors - Harmonious with dark theme */
+    --chart-blue: #0A84FF;
+    --chart-green: #30D158;
+    --chart-red: #FF453A;
+    --chart-purple: #BF5AF2;
+    --chart-orange: #FF9F0A;
+    --chart-pink: #FF375F;
+}
+
+/* Global Styles - Fix text rendering */
+.stApp {
+    font-family: var(--sf-pro);
+    background-color: var(--background);
+    color: var(--text-primary);
+}
+
+/* Main container */
+.main .block-container {
+    padding: 2rem 3rem;
+    max-width: 1400px;
+}
+
+/* Global text overflow fixes */
+*, *::before, *::after {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, div {
+    font-family: var(--sf-pro) !important;
+    word-break: normal;
+}
+
+/* Prevent text overlap in markdown */
+.stMarkdown, .stMarkdown p, .stMarkdown div, .stMarkdown span {
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+
+/* Header Styling */
+.main-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 3rem 2.5rem;
+    border-radius: var(--radius-large);
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: var(--shadow-elevated);
+}
+
+.main-header h1 {
+    font-size: 2.75rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.8px;
+}
+
+.main-header p {
+    font-size: 1.125rem;
+    opacity: 0.95;
+    margin-top: 0.75rem;
+    font-weight: 400;
+}
+
+/* Navigation Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem;
+    background-color: var(--surface);
+    border-radius: var(--radius-large);
+    padding: 0.375rem;
+    border: 1px solid var(--border);
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 48px;
+    background-color: transparent;
+    border-radius: var(--radius);
+    padding: 0 2rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: var(--surface-elevated);
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2);
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    color: var(--text-primary);
+}
+
+/* Cards */
+.card {
+    background: var(--surface);
+    border-radius: var(--radius-large);
+    padding: 1.75rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+}
+
+/* Status Cards */
+.status-card-allowed {
+    background: linear-gradient(135deg, rgba(48, 209, 88, 0.15) 0%, rgba(48, 209, 88, 0.05) 100%);
+    border: 1.5px solid rgba(48, 209, 88, 0.3);
+    border-radius: var(--radius-large);
+    padding: 1.5rem;
+}
+
+.status-card-blocked {
+    background: linear-gradient(135deg, rgba(255, 69, 58, 0.15) 0%, rgba(255, 69, 58, 0.05) 100%);
+    border: 1.5px solid rgba(255, 69, 58, 0.3);
+    border-radius: var(--radius-large);
+    padding: 1.5rem;
+}
+
+/* Metrics */
+.metric-container {
+    display: flex;
+    gap: 1.25rem;
+    margin: 1.75rem 0;
+}
+
+.metric-card {
+    flex: 1;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-large);
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.metric-label {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.625rem;
+}
+
+.metric-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.metric-delta {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.125rem;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: 0.3px;
+}
+
+.status-allowed {
+    background: rgba(48, 209, 88, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(48, 209, 88, 0.3);
+}
+
+.status-blocked {
+    background: rgba(255, 69, 58, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(255, 69, 58, 0.3);
+}
+
+.status-warning {
+    background: rgba(255, 214, 10, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(255, 214, 10, 0.3);
+}
+
+/* Buttons - Fix text wrapping */
+.stButton > button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0.875rem 1.75rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.25);
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    height: auto !important;
+    min-height: 42px;
+    line-height: 1.4 !important;
+}
+
+.stButton > button:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(10, 132, 255, 0.35);
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+}
+
+/* Input Fields */
+.stTextArea textarea, .stTextInput input, .stSelectbox select {
+    background-color: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    font-family: var(--sf-pro);
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.stTextArea textarea:focus, .stTextInput input:focus, .stSelectbox select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15);
+    outline: none;
+}
+
+.stTextArea textarea::placeholder, .stTextInput input::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Progress Bar */
+.stProgress > div > div {
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-hover) 100%);
+    border-radius: 10px;
+    height: 8px;
+}
+
+.stProgress > div {
+    background-color: var(--surface-elevated);
+    border-radius: 10px;
+}
+
+/* Data Table */
+.dataframe {
+    border: none !important;
+    border-radius: var(--radius-large);
+    overflow: hidden;
+    background-color: var(--surface);
+}
+
+.dataframe thead tr {
+    background-color: var(--surface-elevated);
+}
+
+.dataframe th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.8px;
+    padding: 1rem !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.dataframe td {
+    padding: 1rem !important;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+}
+
+.dataframe tbody tr:hover {
+    background-color: var(--surface-secondary);
+}
+
+/* Expander - Clean styling with proper text visibility */
+.streamlit-expanderHeader {
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    overflow: visible !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    line-height: 1.6 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.streamlit-expanderHeader:hover {
+    background-color: var(--surface-elevated);
+}
+
+.streamlit-expanderHeader p {
+    overflow: visible !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    margin: 0 !important;
+    line-height: 1.6 !important;
+    width: 100% !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure markdown content is always visible */
+[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"],
+[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] p,
+[data-testid="stExpander"] details summary p {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: 16px !important;
+}
+
+/* Ensure proper content display */
+.streamlit-expanderHeader > div {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Fix button container within expander */
+.streamlit-expanderContent .stButton {
+    margin-top: 0.5rem;
+}
+
+.streamlit-expanderContent {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* File Uploader */
+.stFileUploader {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-large);
+    padding: 2.5rem;
+    text-align: center;
+    background-color: var(--surface);
+    transition: all 0.2s ease;
+}
+
+.stFileUploader:hover {
+    border-color: var(--primary);
+    background-color: var(--surface-elevated);
+}
+
+.stFileUploader label {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+}
+
+/* Select Box */
+.stSelectbox > div > div {
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+}
+
+.stSelectbox [data-baseweb="select"] {
+    background-color: var(--surface);
+}
+
+/* Multi-select */
+.stMultiSelect > div > div {
+    background-color: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.stMultiSelect [data-baseweb="tag"] {
+    background-color: var(--primary);
+    color: white;
+    border-radius: 6px;
+}
+
+/* Charts & Visualizations */
+.js-plotly-plot {
+    border-radius: var(--radius-large);
+    overflow: hidden;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+}
+
+/* Matplotlib figures */
+.stImage img {
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow);
+}
+
+/* Info/Success/Warning/Error Messages */
+.stAlert {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1rem 1.25rem;
+    font-weight: 500;
+}
+
+[data-baseweb="notification"] {
+    background-color: var(--surface-elevated);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+/* Success message */
+.stSuccess {
+    background-color: rgba(48, 209, 88, 0.1);
+    border-color: rgba(48, 209, 88, 0.3);
+    color: var(--success);
+}
+
+/* Error message */
+.stError {
+    background-color: rgba(255, 69, 58, 0.1);
+    border-color: rgba(255, 69, 58, 0.3);
+    color: var(--danger);
+}
+
+/* Warning message */
+.stWarning {
+    background-color: rgba(255, 214, 10, 0.1);
+    border-color: rgba(255, 214, 10, 0.3);
+    color: var(--warning);
+}
+
+/* Info message */
+.stInfo {
+    background-color: rgba(10, 132, 255, 0.1);
+    border-color: rgba(10, 132, 255, 0.3);
+    color: var(--primary);
+}
+
+/* Checkbox & Radio */
+.stCheckbox, .stRadio {
+    color: var(--text-primary);
+}
+
+[data-baseweb="checkbox"] {
+    background-color: var(--surface);
+    border-color: var(--border);
+}
+
+[data-baseweb="checkbox"]:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Divider */
+hr {
+    border-color: var(--divider);
+    opacity: 1;
+}
+
+/* Remove Streamlit Branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+.stDeployButton {display: none;}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--surface-secondary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}

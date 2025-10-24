@@ -1,0 +1,36 @@
+# ===== Core Framework =====
+streamlit>=1.38.0  # Web application framework
+python-dotenv>=1.0.0  # Environment variable management
+
+# ===== Hugging Face Integration =====
+huggingface-hub>=0.25.0  # K2 Think API access
+datasets>=3.0.0  # Dataset loading (JailbreakBench, LLMail-Inject)
+requests>=2.32.0  # HTTP client for API calls
+
+# ===== Cerebras Cloud SDK =====
+cerebras-cloud-sdk>=1.0.0  # Fast LLM inference API
+
+# ===== Configuration & Data =====
+pyyaml>=6.0.1  # YAML configuration parsing
+jsonlines>=4.0.0  # Decision logging format
+reportlab>=4.0.0  # PDF report generation
+
+# ===== Performance & Async =====
+aiohttp>=3.10.0  # Async HTTP client for parallel testing
+tenacity>=8.5.0  # Retry logic with exponential backoff
+
+# ===== Machine Learning =====
+scikit-learn>=1.3.0  # Model evaluation and metrics
+pandas>=2.0.0  # Data manipulation for analysis
+numpy>=1.24.0  # Numerical computing
+
+# ===== Testing =====
+pytest>=8.3.0  # Unit testing framework
+pytest-asyncio>=0.24.0  # Async test support
+pytest-cov>=5.0.0  # Code coverage reporting
+pytest-mock>=3.14.0  # Mocking support
+
+# ===== Optional: Development Tools =====
+# black>=24.0.0  # Code formatter (use locally)
+# pylint>=3.2.0  # Linter (use locally)
+# ipython>=8.26.0  # Interactive shell for debugging

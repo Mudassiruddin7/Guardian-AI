@@ -1,0 +1,97 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "llmail-inject-challenge",
+  "dataset_size": 1673774156,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/microsoft/llmail-inject-challenge@1063bdf01ec8762b812d5e06ee768a06faa5a6f7/data/raw_submissions_phase1.jsonl": {
+      "num_bytes": 1666413489,
+      "checksum": null
+    },
+    "hf://datasets/microsoft/llmail-inject-challenge@1063bdf01ec8762b812d5e06ee768a06faa5a6f7/data/raw_submissions_phase2.jsonl": {
+      "num_bytes": 263506099,
+      "checksum": null
+    }
+  },
+  "download_size": 1929919588,
+  "features": {
+    "RowKey": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "Timestamp": {
+      "dtype": "null",
+      "_type": "Value"
+    },
+    "body": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "completed_time": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "job_id": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "objectives": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "output": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "scenario": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "scheduled_time": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "started_time": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "subject": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "team_id": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 3603693744,
+  "splits": {
+    "Phase1": {
+      "name": "Phase1",
+      "num_bytes": 1437241229,
+      "num_examples": 370724,
+      "shard_lengths": [
+        134531,
+        102286,
+        133907
+      ],
+      "dataset_name": "llmail-inject-challenge"
+    },
+    "Phase2": {
+      "name": "Phase2",
+      "num_bytes": 236532927,
+      "num_examples": 90916,
+      "dataset_name": "llmail-inject-challenge"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
