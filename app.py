@@ -932,6 +932,7 @@ def main():
     
     with menu_cols[3]:
         demo_mode = st.checkbox("🎬 Demo", help="Show demo data with realistic metrics", key="demo_mode")
+    
 
         # Rules download button - directly downloads PDF without intermediate button
         # Generate PDF data only once and store in session state

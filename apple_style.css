@@ -25,6 +25,7 @@
   /* Border & Divider */
   --border: #161616;
   --divider: #48484a;
+  --grid-color: rgba(255,255,255,0.015);
 
   /* Shadows */
   --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -47,6 +48,10 @@
 .stApp {
   font-family: var(--font-main);
   background-color: var(--background);
+  background-image:
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  background-size: 25px 25px; /* size of each square */
   color: var(--text-primary);
 }
 
@@ -88,7 +93,7 @@ div {
 
 /* Header Styling */
 .main-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #232526 0%, #6d6d6d 100%);
   padding: 3rem 2.5rem;
   border-radius: var(--radius-large);
   margin-bottom: 2rem;
