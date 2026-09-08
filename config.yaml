@@ -57,8 +57,11 @@ datasets:
 
 # ===== Constitutional AI Rules =====
 rules:
-  # Path to security rules JSON
-  rules_file: ./constitutional_rules/security_rules.json
+  # Active ruleset. enhanced_security_rules.json carries rules 001-034 with
+  # ATLAS and attack-class metadata. The legacy 60-rule file is kept as a
+  # fallback and is loaded only if the primary file is missing.
+  rules_file: ./enhanced_security_rules.json
+  fallback_rules_file: ./constitutional_rules/security_rules.json
   
   # Rule enforcement settings
   enforcement:
@@ -66,11 +69,49 @@ rules:
     block_high: true  # Block HIGH severity automatically
     allow_medium: false  # Medium severity requires review
   
+  # Sept 2026 detection layers (rules 025-034).
+  # Set extended_rules_enabled to false to fall back to pure regex matching
+  # over rules 001-024 exactly as v2.2 behaved.
+  extended_rules_enabled: true
+  obfuscation_decode: true
+  indirect_injection_check: true
+  
   # Decision caching (avoid re-analyzing identical inputs)
   cache:
     enabled: true
     max_size: 1000
     ttl: 3600  # seconds
+
+# ===== Sept 2026 Threat Layers =====
+security:
+  # Set true when Guardian-AI fronts an LLM that holds tool/MCP access.
+  # Escalates rule_032 (tool invocation) from HIGH to CRITICAL.
+  agentic_context: false
+  
+  # Multi-turn context drift monitoring (attack class S3)
+  session_tracking:
+    enabled: true
+    window_size: 10
+    drift_threshold: 0.35
+    embedding_model: "all-MiniLM-L6-v2"
+  
+  # Indirect injection: URLs and external references in log fields
+  url_inspection:
+    enabled: true
+    allowlist_path: "./constitutional_rules/url_allowlist.txt"
+    default_allowlist:
+      - "your-org.com"
+      - "soc-platform.internal"
+  
+  # MITRE ATLAS technique mapping in the audit trail
+  atlas_mapping:
+    enabled: true
+    version: "2026-02"
+  
+  # Rule 033 runs against generated output, not input
+  output_filter:
+    enabled: true
+    redact_credentials: true
 
 # ===== Demo Application Settings =====
 demo:

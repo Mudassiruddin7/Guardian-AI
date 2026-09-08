@@ -205,13 +205,17 @@ class K2ThinkSafetyWrapper:
     """
     
     # Attributes
-    config: Dict                # Loaded from config.yaml
-    rules: List[Dict]          # 24 constitutional security rules
-    decision_cache: Dict       # SHA-256 → {decision, timestamp}
-    metrics: Dict              # Performance tracking counters
-    hf_token: str              # Hugging Face API token
-    cerebras_client: Any       # Cerebras Cloud SDK client
-    audit_log_path: str        # Path to decisions.jsonl
+    config: Dict                    # Loaded from config.yaml
+    rules: List[Dict]               # 34 constitutional security rules
+    ruleset_meta: Dict              # version, ATLAS catalog, class taxonomy
+    decision_cache: Dict            # SHA-256 → {decision, timestamp}
+    metrics: Dict                   # Performance tracking counters
+    hf_token: str                   # Hugging Face API token
+    cerebras_client: Any            # Cerebras Cloud SDK client
+    audit_log_path: str             # Path to decisions.jsonl
+    url_allowlist: set              # Organizational domains (rule 031)
+    session_tracker: SessionContextTracker   # Multi-turn drift window
+    agentic_context: bool           # Escalates rule 032 when True
     
     # Core Methods
     def __init__(config_path: str, hf_token: str)
@@ -440,14 +444,29 @@ User Input → Streamlit UI → analyze_safe()
                              │   - Miss: Continue
                              │
                              ├─→ Constitutional Rules
-                             │   - Iterate 24 patterns
-                             │   - First match: BLOCK
+                             │   - Iterate 34 patterns, collect all hits
+                             │   - Primary = first BLOCK in file order
                              │   - No match: Continue
+                             │
+                             ├─→ Extended Layers (Sept 2026)
+                             │   - base64 decode + recheck  (rule 028)
+                             │   - homograph fold + recheck (rule 029)
+                             │   - split-field rejoin       (rule 030)
+                             │   - URL allowlist check      (rule 031)
+                             │   - tool-use classification  (rule 032)
+                             │
+                             ├─→ Session Drift Scoring
+                             │   - Local embedding, window of 10
+                             │   - CONTEXT_DRIFT above threshold
+                             │   - Warns; does not block on its own
                              │
                              ├─→ LLM API Call
                              │   - Cerebras streaming (preferred)
                              │   - HF Inference (fallback)
                              │   - Mock mode (offline)
+                             │
+                             ├─→ Output Filter (rule 033)
+                             │   - Redact credentials in the response
                              │
                              ├─→ Cache Update
                              │   - Store decision + timestamp
@@ -461,7 +480,11 @@ User Input → Streamlit UI → analyze_safe()
                                  - blocked: bool
                                  - output: str
                                  - rule_name: str
-                                 - latency_ms: int
+                                 - triggered_rules: list[str]
+                                 - atlas_techniques: list[str]
+                                 - attack_class: S1|S2|S3|S4
+                                 - context_drift_score: float
+                                 - latency_ms: float
 ```
 
 ### 3.2 Data Structures
@@ -700,13 +723,19 @@ for rule in self.rules:
     )
 ```
 
-**Early Termination**:
+**Full scan, ordered primary**:
 ```python
-# Stop on first match (critical rules first)
-for rule in sorted(self.rules, key=lambda r: r['severity'], reverse=True):
-    if rule['compiled_pattern'].search(text):
-        return BLOCKED  # Don't check remaining rules
+# v3.0 collects every hit so the audit entry can carry the complete
+# ATLAS technique list. The reported rule is still the first BLOCK in
+# file order, which is what v2.2 returned, so behaviour is unchanged
+# for anything rules 001-024 already covered.
+findings = [f for rule, match in self._scan(text)]
+blocking = [f for f in findings if f["action"] == "BLOCK"]
+primary = blocking[0] if blocking else (findings[0] if findings else None)
 ```
+34 patterns over a typical log line stays well inside the 50ms budget;
+the layered rechecks run the same patterns over a transformed copy only
+when a transform actually changed the text.
 
 **Avoid ReDoS** (Regex Denial of Service):
 ```python
@@ -719,7 +748,8 @@ for rule in sorted(self.rules, key=lambda r: r['severity'], reverse=True):
 | Operation | Latency | Throughput |
 |-----------|---------|------------|
 | Cache hit | 5ms | 200 req/s |
-| Rule check (miss) | 35ms | 28 req/s |
+| Rule check (miss, 34 rules + layers) | <50ms | 20+ req/s |
+| Session drift score (local embedding) | 10-40ms | - |
 | Cerebras API | 800ms | 1.25 req/s |
 | HF API | 1200ms | 0.83 req/s |
 | End-to-end (cached) | 50ms | 20 req/s |
@@ -733,20 +763,38 @@ for rule in sorted(self.rules, key=lambda r: r['severity'], reverse=True):
 
 **Format**: Newline-delimited JSON
 
-**Schema**:
+**Schema** (v3.0, defined by the `AuditEntry` dataclass in `k2_safety.py`):
 ```typescript
 {
-  timestamp: string,       // ISO 8601
-  input_hash: string,      // SHA-256
-  input_preview: string,   // First 200 chars
+  timestamp: string,              // ISO 8601
+  session_id: string,             // groups a drift window
+  input_hash: string,             // SHA-256 of the full input
+  input: string,                  // truncated to logging.audit.preview_chars
+  decision: "BLOCK" | "FLAG" | "ALLOW",
   blocked: boolean,
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE",
+  triggered_rules: string[],      // always present, [] when nothing fired
+  atlas_techniques: string[],     // always present, [] when nothing fired
+  attack_class: "S1" | "S2" | "S3" | "S4" | null,
+  indirect_injection_risk: boolean,
+  tool_use_risk: boolean,
+  context_drift_score: number,
   rule_id: string | null,
-  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "NONE",
+  rule_name: string | null,
   latency_ms: number,
   context: string,
-  unsafe_mode: boolean
+  unsafe_mode: boolean,
+  from_cache: boolean,
+  output_findings: string[],      // output-filter rules that fired
+  ruleset: string                 // which ruleset version wrote this line
 }
 ```
+
+`input_preview` from v2.2 is now `input`. The two list fields are never absent,
+so a parser does not have to branch on a missing key. Cache hits are logged too,
+flagged with `from_cache`, so the trail has no gaps.
+
+Read entries back with `wrapper.read_audit_log(session_id=..., limit=...)`.
 
 **Querying**:
 ```python
@@ -776,18 +824,29 @@ with jsonlines.open('decisions.jsonl') as reader:
 
 ### 8.1 Adding New Rules
 
-1. Edit `enhanced_security_rules.json`:
+1. Edit `enhanced_security_rules.json`. IDs up to `rule_034` are taken:
 ```json
 {
-  "id": "rule_025",
+  "id": "rule_035",
   "name": "Custom Rule Name",
-  "pattern": "(?i)your_regex_here",
+  "description": "What this catches and why",
+  "pattern": "your_regex_here",
   "severity": "HIGH",
-  "action": "BLOCK"
+  "action": "BLOCK",
+  "atlas": ["AML.T0051.000"],
+  "attack_class": "S1",
+  "applies_to": "input"
 }
 ```
+`applies_to: "output"` runs the rule against the model response instead, and
+`action: "FLAG"` annotates a decision without blocking it. Patterns are compiled
+with `IGNORECASE | MULTILINE`, so no `(?i)` prefix is needed.
 
-2. Restart application (auto-loaded)
+2. For a rule that needs more than a pattern, omit `pattern`, give it a
+   `detector` name, and dispatch it from `_run_extended_checks` — that is how
+   rules 028-031 work.
+
+3. Restart application (auto-loaded)
 
 ### 8.2 Custom Datasets
 
@@ -848,7 +907,7 @@ def _call_custom_llm(prompt: str) → str:
 - [ ] Enable audit logging
 - [ ] Configure log rotation
 - [ ] Set up monitoring (Streamlit Cloud)
-- [ ] Test all 24 rules
+- [ ] Test all 34 rules
 - [ ] Run full test suite
 - [ ] Load test with JailbreakBench
 - [ ] Verify cache hit rate >50%

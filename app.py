@@ -1,9 +1,11 @@
 import streamlit as st
 import json
 import time
+import uuid
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any
+import altair as alt
 import pandas as pd
 from datasets import load_dataset
 from io import BytesIO
@@ -91,7 +93,7 @@ def generate_pdf_report(scenario_name: str, attack_text: str, result: Dict[str, 
     story.append(Paragraph("Framework Overview", heading_style))
     overview_data = [
         ['Framework Version', rules_data.get('version', 'v2.2')],
-        ['Total Security Rules', str(rules_data.get('total_rules', 24))],
+        ['Total Security Rules', str(rules_data.get('total_rules', 34))],
         ['Last Updated', rules_data.get('last_updated', datetime.now().isoformat())],
         ['Protection Coverage', 'Command Injection, Phishing'],
         ['Report Generated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
@@ -147,7 +149,10 @@ def generate_pdf_report(scenario_name: str, attack_text: str, result: Dict[str, 
         story.append(Spacer(1, 0.3*inch))
     
     # Complete Constitutional AI Rules
-    story.append(Paragraph("Complete Constitutional AI Rules (24 Rules)", heading_style))
+    story.append(Paragraph(
+        f"Complete Constitutional AI Rules ({rules_data.get('total_rules', 34)} Rules)",
+        heading_style,
+    ))
     
     all_rules = rules_data.get('rules', [])
     if all_rules:
@@ -267,6 +272,146 @@ load_css()
 # Additional inline CSS for specific components
 st.markdown("""
 <style>
+    /* ---- terminal aesthetic ------------------------------------------- */
+    :root {
+        --g-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+                  "Liberation Mono", monospace;
+        --g-surface: #1e1e22;
+        --g-line: #2a2a2e;
+        --g-ink: #f2f2f7;
+        --g-muted: #98989d;
+    }
+
+    /* .stMarkdown div { white-space: normal } ships earlier in this file and
+       outranks a bare class selector, so the ASCII blocks force their own. */
+    .stMarkdown div.g-ascii, .g-ascii {
+        font-family: var(--g-mono) !important;
+        font-size: 12px;
+        line-height: 1.25;
+        color: var(--g-muted);
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin: 18px 0 8px 0;
+        white-space: pre !important;
+        word-break: normal !important;
+        overflow-x: auto;
+    }
+
+    .stMarkdown div.g-banner, .g-banner {
+        font-family: var(--g-mono) !important;
+        font-size: 11px;
+        line-height: 1.15;
+        color: #0a84ff;
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin: 4px 0 22px 0;
+        white-space: pre !important;
+        word-break: normal !important;
+        overflow-x: auto;
+        text-shadow: 0 0 18px rgba(10, 132, 255, 0.35);
+    }
+
+    .stMarkdown div.g-empty, .g-empty {
+        color: var(--g-muted);
+        border: 1px dashed var(--g-line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 8px 0;
+    }
+
+    .g-statusline {
+        font-family: var(--g-mono);
+        font-size: 12px;
+        color: var(--g-muted);
+        margin: 2px 0 14px 0;
+        letter-spacing: 0.02em;
+    }
+    .g-statusline b { color: var(--g-ink); font-weight: 600; }
+    .g-statusline .sep { color: var(--g-line); padding: 0 8px; }
+
+    .g-panel {
+        background: var(--g-surface);
+        border: 1px solid var(--g-line);
+        border-left: 3px solid var(--g-line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 10px 0;
+        font-family: var(--g-mono);
+    }
+
+    .g-verdict { font-size: 17px; font-weight: 700; letter-spacing: 0.04em; }
+    .g-verdict-sub {
+        font-size: 12px; font-weight: 400; color: var(--g-muted);
+        padding-left: 10px; letter-spacing: 0;
+    }
+
+    .g-chips { margin: 10px 0 6px 0; }
+    .g-chip {
+        display: inline-block;
+        font-family: var(--g-mono);
+        font-size: 11px;
+        color: var(--g-muted);
+        border: 1px solid var(--g-line);
+        border-radius: 999px;
+        padding: 2px 10px;
+        margin: 3px 5px 3px 0;
+        white-space: nowrap;
+    }
+    .g-chip-warn { color: #ffd60a; border-color: rgba(255, 214, 10, 0.4); }
+
+    .g-meter { font-size: 12px; color: var(--g-muted); margin-top: 8px; }
+    .g-meter b { color: var(--g-ink); }
+    .g-meter code {
+        font-family: var(--g-mono);
+        background: transparent;
+        color: #0a84ff;
+        padding: 0 8px;
+        letter-spacing: -1px;
+    }
+
+    .g-stat { text-align: center; padding: 26px 16px; }
+    .g-stat-value { font-family: var(--g-mono); font-size: 44px; font-weight: 700; line-height: 1; }
+    .g-stat-label { font-size: 12px; color: var(--g-muted); margin-top: 10px; line-height: 1.5; }
+
+    .g-tablewrap { overflow-x: auto; margin: 6px 0 18px 0; }
+    table.g-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--g-mono);
+        font-size: 12px;
+    }
+    table.g-table thead th {
+        text-align: left;
+        color: var(--g-muted);
+        font-weight: 500;
+        border-bottom: 1px solid var(--g-line);
+        padding: 6px 10px;
+        white-space: nowrap;
+    }
+    table.g-table tbody td {
+        padding: 9px 10px;
+        border-bottom: 1px solid rgba(42, 42, 46, 0.6);
+        vertical-align: top;
+        color: var(--g-ink);
+    }
+    table.g-table tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
+    td.g-n, td.g-ts { color: var(--g-muted); white-space: nowrap; }
+    td.g-txt { min-width: 260px; }
+    td.g-dec, td.g-sev, td.g-cls, td.g-drift { white-space: nowrap; font-weight: 600; }
+    td.g-drift { color: var(--g-ink); }
+    .g-tags { margin-top: 5px; }
+    .g-tag {
+        display: inline-block;
+        font-size: 10px;
+        color: var(--g-muted);
+        border: 1px solid var(--g-line);
+        border-radius: 4px;
+        padding: 1px 6px;
+        margin: 2px 4px 0 0;
+    }
+
     /* Global text fixes */
     * {
         word-wrap: break-word;
@@ -594,14 +739,20 @@ def load_soc_synthetic():
         return []
 
 
-def render_comparison_columns(input_text: str, context: str, wrapper: K2ThinkSafetyWrapper):
+def render_comparison_columns(
+    input_text: str,
+    context: str,
+    wrapper: K2ThinkSafetyWrapper,
+    session_id: str = None,
+):
     """
     Render side-by-side comparison of vulnerable vs. hardened LLM.
-    
+
     Args:
         input_text: User input to analyze
         context: Analysis context
         wrapper: K2ThinkSafetyWrapper instance
+        session_id: Session the hardened path scores drift against
     """
     col1, col2 = st.columns(2)
     
@@ -612,7 +763,7 @@ def render_comparison_columns(input_text: str, context: str, wrapper: K2ThinkSaf
         
         with st.spinner("Analyzing without protection..."):
             try:
-                unsafe_result = wrapper.analyze_unsafe(input_text, context)
+                unsafe_result = wrapper.analyze_unsafe(input_text, context, session_id=session_id)
                 
                 st.markdown('<div class="warning-box">', unsafe_allow_html=True)
                 st.markdown("**⚠️ UNSAFE MODE ACTIVE**")
@@ -635,20 +786,10 @@ def render_comparison_columns(input_text: str, context: str, wrapper: K2ThinkSaf
         
         with st.spinner("Analyzing with safety layer..."):
             try:
-                safe_result = wrapper.analyze_safe(input_text, context)
-                
-                if safe_result['blocked']:
-                    st.markdown('<div class="blocked-box">', unsafe_allow_html=True)
-                    st.markdown("**🛑 BLOCKED**")
-                    st.markdown(f"**Rule:** {safe_result['rule_name']}")
-                    st.markdown(f"**Severity:** {safe_result['severity']}")
-                    st.markdown(f"**Latency:** {safe_result['latency_ms']}ms")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                else:
-                    st.markdown('<div class="safe-box">', unsafe_allow_html=True)
-                    st.markdown("**✅ SAFE**")
-                    st.markdown(f"**Latency:** {safe_result['latency_ms']}ms")
-                    st.markdown('</div>', unsafe_allow_html=True)
+                safe_result = wrapper.analyze_safe(input_text, context, session_id=session_id)
+
+                render_verdict_strip(safe_result, wrapper)
+                st.markdown(f"**Latency:** {safe_result['latency_ms']}ms")
                 
                 st.markdown("**Output:**")
                 st.write(safe_result['output'])
@@ -889,18 +1030,506 @@ def run_batch_test(wrapper: K2ThinkSafetyWrapper, test_cases: List[Dict], progre
     return pd.DataFrame(results)
 
 
+# ============================================================================
+# Terminal aesthetic + Session Monitor (Update 6)
+#
+# Everything below is local state. The Session Monitor makes no API calls: it
+# reads the in-memory drift tracker and the on-disk JSONL audit trail.
+# ============================================================================
+
+ASCII_BANNER = r"""╭──────────────────────────────────────────────────────────────────────╮
+│  ▄████▄ ██  ██ ▄████▄ █████▄ █████▄ ██ ▄████▄ ██▄ ██      ▄████▄ ██  │
+│  ██  ▀▀ ██  ██ ██  ██ ██  ██ ██  ██ ██ ██  ██ ███ ██      ██  ██ ██  │
+│  ██ ▄██ ██  ██ ██████ █████▀ ██  ██ ██ ██████ ██████ ▄▄▄▄ ██████ ██  │
+│  ██  ██ ██  ██ ██  ██ ██ ▀█▄ ██  ██ ██ ██  ██ ██ ███      ██  ██ ██  │
+│  ▀████▀ ▀████▀ ██  ██ ██  ██ █████▀ ██ ██  ██ ██ ▀██      ██  ██ ██  │
+│                                                                      │
+│  constitutional defense layer for llm-augmented SOCs                 │
+╰──────────────────────────────────────────────────────────────────────╯"""
+
+# Categorical hues for the S1-S4 attack classes. Fixed order, never cycled.
+# Validated for the dark chart surface (#1e1e22): all four sit inside the
+# OKLCH L 0.48-0.67 band, clear the chroma floor, hold CVD deltaE 23.8 on the
+# worst adjacent pair and 31.0 in normal vision, and pass 3:1 against surface.
+CLASS_COLORS = {
+    "S1": "#0a84ff",   # blue    - direct override
+    "S2": "#d97706",   # amber   - persona hijack
+    "S3": "#bf5af2",   # purple  - context manipulation
+    "S4": "#16a34a",   # green   - obfuscated payload
+}
+CLASS_ORDER = ["S1", "S2", "S3", "S4"]
+CLASS_LABELS = {
+    "S1": "S1 direct override",
+    "S2": "S2 persona hijack",
+    "S3": "S3 context manipulation",
+    "S4": "S4 obfuscated payload",
+}
+
+# Status colors stay reserved. They never appear as a categorical series.
+INK_PRIMARY = "#f2f2f7"
+INK_MUTED = "#98989d"
+SURFACE = "#1e1e22"
+GRID = "#2a2a2e"
+SERIES_BLUE = "#0a84ff"
+STATUS_CRITICAL = "#ff453a"
+STATUS_WARNING = "#ffd60a"
+STATUS_GOOD = "#30d158"
+
+
+def ascii_rule(label: str = "", width: int = 78) -> str:
+    """A labelled horizontal rule, e.g. ``──[ SESSION ]────────────``."""
+    if not label:
+        return "─" * width
+    head = f"──[ {label.upper()} ]"
+    return head + "─" * max(0, width - len(head))
+
+
+def ascii_meter(value: float, maximum: float = 1.0, width: int = 24) -> str:
+    """Render a 0..maximum value as a block meter."""
+    if maximum <= 0:
+        return "░" * width
+    filled = int(round(min(1.0, max(0.0, value / maximum)) * width))
+    return "█" * filled + "░" * (width - filled)
+
+
+def chart_theme(chart):
+    """Recessive axes, transparent ground, muted ink. Applied to every chart."""
+    return (
+        chart
+        .configure_view(strokeWidth=0, fill="transparent")
+        .configure(background="transparent")
+        .configure_axis(
+            grid=True,
+            gridColor=GRID,
+            gridOpacity=0.7,
+            domainColor=GRID,
+            tickColor=GRID,
+            labelColor=INK_MUTED,
+            titleColor=INK_MUTED,
+            labelFont="ui-monospace, SFMono-Regular, Menlo, monospace",
+            titleFont="ui-monospace, SFMono-Regular, Menlo, monospace",
+            labelFontSize=11,
+            titleFontSize=11,
+        )
+        .configure_legend(
+            labelColor=INK_MUTED,
+            titleColor=INK_MUTED,
+            labelFont="ui-monospace, SFMono-Regular, Menlo, monospace",
+            titleFont="ui-monospace, SFMono-Regular, Menlo, monospace",
+            labelFontSize=11,
+            titleFontSize=11,
+            symbolStrokeWidth=0,
+            symbolType="square",
+        )
+    )
+
+
+def severity_color(severity: str) -> str:
+    """Status color for a severity label. Reserved palette, never a series hue."""
+    return {
+        "CRITICAL": STATUS_CRITICAL,
+        "HIGH": "#ff9f0a",
+        "MEDIUM": STATUS_WARNING,
+        "LOW": STATUS_GOOD,
+    }.get((severity or "").upper(), INK_MUTED)
+
+
+def render_verdict_strip(result: Dict[str, Any], wrapper: K2ThinkSafetyWrapper):
+    """
+    The decision line shown under Single Input: verdict, attack class, ATLAS,
+    drift. Reads only fields the wrapper already returns.
+    """
+    blocked = result.get("blocked", False)
+    flagged = bool(result.get("triggered_rules")) and not blocked
+
+    if blocked:
+        icon, word, tone = "⛔", "BLOCKED", STATUS_CRITICAL
+    elif flagged:
+        icon, word, tone = "⚠", "FLAGGED", STATUS_WARNING
+    else:
+        icon, word, tone = "✔", "ALLOWED", STATUS_GOOD
+
+    klass = result.get("attack_class")
+    atlas = result.get("atlas_techniques") or []
+    drift = float(result.get("context_drift_score") or 0.0)
+    threshold = wrapper.session_tracker.drift_threshold
+
+    chips = []
+    if klass:
+        chips.append(
+            f'<span class="g-chip" style="border-color:{CLASS_COLORS.get(klass, INK_MUTED)};'
+            f'color:{CLASS_COLORS.get(klass, INK_MUTED)}">{CLASS_LABELS.get(klass, klass)}</span>'
+        )
+    for technique in atlas:
+        chips.append(f'<span class="g-chip">{technique}</span>')
+    if result.get("indirect_injection_risk"):
+        chips.append('<span class="g-chip g-chip-warn">indirect injection risk</span>')
+    if result.get("tool_use_risk"):
+        chips.append('<span class="g-chip g-chip-warn">tool use risk</span>')
+    if result.get("output_findings"):
+        chips.append('<span class="g-chip g-chip-warn">output redacted</span>')
+
+    st.markdown(
+        f'''<div class="g-panel">
+  <div class="g-verdict" style="color:{tone}">{icon} {word}
+    <span class="g-verdict-sub">{result.get("rule_name") or "no rule triggered"}</span>
+  </div>
+  <div class="g-chips">{"".join(chips) or '<span class="g-chip">no findings</span>'}</div>
+  <div class="g-meter">
+    session drift <b>{drift:.4f}</b> / {threshold:.2f}
+    <code>{ascii_meter(drift, 1.0)}</code>
+    {"<span style='color:" + STATUS_WARNING + "'>CONTEXT_DRIFT</span>" if drift > threshold else ""}
+  </div>
+</div>''',
+        unsafe_allow_html=True,
+    )
+
+
+def render_session_monitor(wrapper: K2ThinkSafetyWrapper):
+    """
+    Session Monitor tab.
+
+    Per-input classification cannot see an S3 attack that is assembled across
+    several turns, so this view is built around the session rather than the
+    input: what the window holds, how far each entry sat from the established
+    baseline, and which ATLAS techniques and attack classes the session
+    accumulated.
+
+    Purely local: the drift tracker lives in memory and the rest is read back
+    from the JSONL audit trail. No API calls.
+    """
+    st.markdown(
+        f'<div class="g-ascii">{ascii_rule("session monitor")}</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Multi-turn context drift, ATLAS coverage and attack-class breakdown "
+        "for one session. Local state only."
+    )
+
+    tracker = wrapper.session_tracker
+    threshold = tracker.drift_threshold
+
+    known = tracker.sessions()
+    audit_sessions = sorted({
+        e.get("session_id") for e in wrapper.read_audit_log(limit=2000)
+        if e.get("session_id")
+    })
+    options = sorted(set(known) | set(audit_sessions)) or ["default"]
+
+    pick_col, free_col, act_col = st.columns([3, 3, 2])
+    with pick_col:
+        chosen = st.selectbox("Session", options, key="session_monitor_pick")
+    with free_col:
+        typed = st.text_input(
+            "or enter a session ID",
+            value="",
+            placeholder=chosen,
+            key="session_monitor_typed",
+        ).strip()
+    session_id = typed or chosen
+    with act_col:
+        st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+        if st.button("Reset window", key="session_monitor_reset", width="stretch"):
+            tracker.reset(session_id)
+            st.success(f"Cleared drift window for `{session_id}`")
+
+    entries = wrapper.read_audit_log(session_id=session_id, limit=200)
+    history = tracker.history(session_id)
+
+    if not entries and not history:
+        st.markdown(
+            f'''<div class="g-ascii g-empty">
+  no activity recorded for session "{session_id}"
+
+  run an analysis on the Single Input tab with this session id,
+  or pick a session that already has entries.
+</div>''',
+            unsafe_allow_html=True,
+        )
+        return
+
+    # ---- rows: audit trail is richer, tracker history is the live fallback
+    if entries:
+        rows = [{
+            "n": i + 1,
+            "timestamp": e.get("timestamp", "")[:19].replace("T", " "),
+            "input": e.get("input", ""),
+            "decision": e.get("decision", "ALLOW"),
+            "severity": e.get("severity", "NONE"),
+            "attack_class": e.get("attack_class"),
+            "atlas": e.get("atlas_techniques") or [],
+            "rules": e.get("triggered_rules") or [],
+            "drift": float(e.get("context_drift_score") or 0.0),
+            "indirect": bool(e.get("indirect_injection_risk")),
+            "tool": bool(e.get("tool_use_risk")),
+        } for i, e in enumerate(entries[-tracker.window_size:])]
+    else:
+        rows = [{
+            "n": i + 1,
+            "timestamp": h["timestamp"][:19].replace("T", " "),
+            "input": h["input"],
+            "decision": "ALLOW",
+            "severity": "NONE",
+            "attack_class": None,
+            "atlas": [],
+            "rules": [],
+            "drift": h["drift_score"],
+            "indirect": False,
+            "tool": False,
+        } for i, h in enumerate(history)]
+
+    blocked_n = sum(1 for r in rows if r["decision"] == "BLOCK")
+    flagged_n = sum(1 for r in rows if r["decision"] == "FLAG")
+    peak_drift = max((r["drift"] for r in rows), default=0.0)
+
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Entries in window", len(rows))
+    k2.metric("Blocked", blocked_n)
+    k3.metric("Flagged", flagged_n)
+    k4.metric("Peak drift", f"{peak_drift:.3f}", delta=f"{peak_drift - threshold:+.3f} vs threshold",
+              delta_color="inverse")
+    k5.metric("Embedding backend", tracker.backend)
+
+    # ---- drift over the window -------------------------------------------
+    st.markdown(
+        f'<div class="g-ascii">{ascii_rule("context drift")}</div>',
+        unsafe_allow_html=True,
+    )
+    drift_df = pd.DataFrame([{
+        "turn": r["n"],
+        "drift": r["drift"],
+        "decision": r["decision"],
+        "input": r["input"][:80],
+    } for r in rows])
+
+    base = alt.Chart(drift_df).encode(
+        x=alt.X("turn:O", title="turn in window", axis=alt.Axis(labelAngle=0)),
+        y=alt.Y("drift:Q", title="cosine distance from centroid",
+                scale=alt.Scale(domain=[0, max(1.0, peak_drift * 1.15)])),
+    )
+    line = base.mark_line(strokeWidth=2, color=SERIES_BLUE, interpolate="monotone")
+    points = base.mark_point(
+        size=90, filled=True, color=SERIES_BLUE, stroke=SURFACE, strokeWidth=2
+    ).encode(
+        tooltip=[
+            alt.Tooltip("turn:O", title="turn"),
+            alt.Tooltip("drift:Q", title="drift", format=".4f"),
+            alt.Tooltip("decision:N", title="decision"),
+            alt.Tooltip("input:N", title="input"),
+        ]
+    )
+    rule = alt.Chart(pd.DataFrame({"y": [threshold]})).mark_rule(
+        strokeDash=[5, 4], strokeWidth=2, color=STATUS_CRITICAL
+    ).encode(y="y:Q")
+    rule_text = alt.Chart(pd.DataFrame({"y": [threshold], "t": [f"threshold {threshold:.2f}"]})).mark_text(
+        align="left", baseline="bottom", dx=4, dy=-4, color=STATUS_CRITICAL,
+        font="ui-monospace, monospace", fontSize=11,
+    ).encode(y="y:Q", text="t:N")
+
+    st.altair_chart(
+        chart_theme((line + points + rule + rule_text).properties(height=260)),
+        width="stretch",
+    )
+
+    # ---- ATLAS frequency and attack class breakdown ----------------------
+    left, right = st.columns(2)
+
+    with left:
+        st.markdown(
+            f'<div class="g-ascii">{ascii_rule("atlas techniques", 38)}</div>',
+            unsafe_allow_html=True,
+        )
+        counts: Dict[str, int] = {}
+        for r in rows:
+            for technique in r["atlas"]:
+                counts[technique] = counts.get(technique, 0) + 1
+
+        if counts:
+            catalog = (wrapper.ruleset_meta or {}).get("atlas_catalog", {})
+            atlas_df = pd.DataFrame([
+                {"technique": t, "count": c, "name": catalog.get(t, "")}
+                for t, c in sorted(counts.items(), key=lambda kv: -kv[1])
+            ])
+            top = int(atlas_df["count"].max())
+            bars = alt.Chart(atlas_df).mark_bar(
+                cornerRadiusEnd=4, height=18, color=SERIES_BLUE
+            ).encode(
+                # labelOverlap=False: Vega thins categorical labels when the
+                # band is tight, which silently hides techniques.
+                y=alt.Y("technique:N", sort="-x", title=None,
+                        axis=alt.Axis(labelOverlap=False, labelLimit=220)),
+                x=alt.X("count:Q", title="findings",
+                        scale=alt.Scale(domain=[0, top + max(0.35, top * 0.2)], nice=False),
+                        axis=alt.Axis(tickMinStep=1, format="d")),
+                tooltip=[
+                    alt.Tooltip("technique:N", title="ATLAS"),
+                    alt.Tooltip("name:N", title="technique"),
+                    alt.Tooltip("count:Q", title="findings"),
+                ],
+            )
+            labels = alt.Chart(atlas_df).mark_text(
+                align="left", dx=6, color=INK_PRIMARY,
+                font="ui-monospace, monospace", fontSize=11,
+            ).encode(
+                y=alt.Y("technique:N", sort="-x"), x="count:Q", text="count:Q"
+            )
+            st.altair_chart(
+                chart_theme((bars + labels).properties(height=max(150, 40 * len(atlas_df)))),
+                width="stretch",
+            )
+        else:
+            st.markdown(
+                '<div class="g-ascii g-empty">  no ATLAS techniques in this window</div>',
+                unsafe_allow_html=True,
+            )
+
+    with right:
+        st.markdown(
+            f'<div class="g-ascii">{ascii_rule("attack classes", 38)}</div>',
+            unsafe_allow_html=True,
+        )
+        class_counts: Dict[str, int] = {}
+        for r in rows:
+            if r["attack_class"]:
+                class_counts[r["attack_class"]] = class_counts.get(r["attack_class"], 0) + 1
+
+        if not class_counts:
+            st.markdown(
+                '<div class="g-ascii g-empty">  no classified findings in this window</div>',
+                unsafe_allow_html=True,
+            )
+        elif len(class_counts) == 1:
+            # A one-slice donut is not a chart. State the number.
+            only, count = next(iter(class_counts.items()))
+            st.markdown(
+                f'''<div class="g-panel g-stat" style="border-left-color:{CLASS_COLORS.get(only, INK_MUTED)}">
+  <div class="g-stat-value" style="color:{CLASS_COLORS.get(only, INK_MUTED)}">{count}</div>
+  <div class="g-stat-label">{CLASS_LABELS.get(only, only)}<br>every classified finding in this window</div>
+</div>''',
+                unsafe_allow_html=True,
+            )
+        else:
+            total = sum(class_counts.values())
+            class_df = pd.DataFrame([
+                {
+                    "class": CLASS_LABELS.get(k, k),
+                    "code": k,
+                    "count": v,
+                    "pct": v / total,
+                }
+                for k in CLASS_ORDER if k in class_counts
+                for v in [class_counts[k]]
+            ])
+            order = [CLASS_LABELS.get(k, k) for k in CLASS_ORDER if k in class_counts]
+            colors = [CLASS_COLORS[k] for k in CLASS_ORDER if k in class_counts]
+
+            donut = alt.Chart(class_df).mark_arc(
+                innerRadius=58, outerRadius=98, stroke=SURFACE, strokeWidth=2
+            ).encode(
+                theta=alt.Theta("count:Q", stack=True),
+                color=alt.Color(
+                    "class:N",
+                    scale=alt.Scale(domain=order, range=colors),
+                    legend=alt.Legend(title=None, orient="bottom", columns=1),
+                ),
+                order=alt.Order("code:N"),
+                tooltip=[
+                    alt.Tooltip("class:N", title="attack class"),
+                    alt.Tooltip("count:Q", title="findings"),
+                    alt.Tooltip("pct:Q", title="share", format=".0%"),
+                ],
+            )
+            slice_labels = alt.Chart(class_df).mark_text(
+                radius=118, color=INK_PRIMARY,
+                font="ui-monospace, monospace", fontSize=11,
+            ).encode(
+                theta=alt.Theta("count:Q", stack=True),
+                order=alt.Order("code:N"),
+                text=alt.Text("code:N"),
+            )
+            st.altair_chart(
+                chart_theme((donut + slice_labels).properties(height=340)),
+                width="stretch",
+            )
+
+    # ---- the window itself -----------------------------------------------
+    st.markdown(
+        f'<div class="g-ascii">{ascii_rule("window - oldest first")}</div>',
+        unsafe_allow_html=True,
+    )
+
+    cells = []
+    for r in rows:
+        if r["decision"] == "BLOCK":
+            tone, marker = STATUS_CRITICAL, "⛔"
+        elif r["decision"] == "FLAG" or r["drift"] > threshold:
+            tone, marker = STATUS_WARNING, "⚠"
+        else:
+            tone, marker = INK_MUTED, "·"
+
+        tags = " ".join(
+            f'<span class="g-tag">{t}</span>' for t in (r["rules"][:3] + r["atlas"][:2])
+        )
+        drift_flag = " CONTEXT_DRIFT" if r["drift"] > threshold else ""
+        text = (r["input"] or "").replace("<", "&lt;").replace(">", "&gt;")
+        cells.append(
+            f'''<tr style="border-left:3px solid {tone}">
+  <td class="g-n">{r["n"]:02d}</td>
+  <td class="g-ts">{r["timestamp"]}</td>
+  <td class="g-txt">{text[:110]}{"&hellip;" if len(text) > 110 else ""}<div class="g-tags">{tags}</div></td>
+  <td class="g-dec" style="color:{tone}">{marker} {r["decision"]}</td>
+  <td class="g-sev" style="color:{severity_color(r["severity"])}">{r["severity"]}</td>
+  <td class="g-cls" style="color:{CLASS_COLORS.get(r["attack_class"], INK_MUTED)}">{r["attack_class"] or "-"}</td>
+  <td class="g-drift">{r["drift"]:.4f}<span style="color:{STATUS_WARNING}">{drift_flag}</span></td>
+</tr>'''
+        )
+
+    st.markdown(
+        '<div class="g-tablewrap"><table class="g-table">'
+        '<thead><tr><th>#</th><th>time</th><th>input</th><th>decision</th>'
+        '<th>severity</th><th>class</th><th>drift</th></tr></thead>'
+        f'<tbody>{"".join(cells)}</tbody></table></div>',
+        unsafe_allow_html=True,
+    )
+
+    # ---- export -----------------------------------------------------------
+    export = {
+        "session_id": session_id,
+        "exported_at": datetime.now().isoformat(),
+        "ruleset_version": (wrapper.ruleset_meta or {}).get("version"),
+        "atlas_version": (wrapper.ruleset_meta or {}).get("atlas_version"),
+        "drift_threshold": threshold,
+        "embedding_backend": tracker.backend,
+        "window_size": tracker.window_size,
+        "summary": {
+            "entries": len(rows),
+            "blocked": blocked_n,
+            "flagged": flagged_n,
+            "peak_drift": peak_drift,
+            "atlas_frequency": {
+                t: sum(1 for r in rows if t in r["atlas"])
+                for t in sorted({t for r in rows for t in r["atlas"]})
+            },
+            "attack_classes": class_counts,
+        },
+        "entries_detail": entries if entries else rows,
+    }
+
+    st.download_button(
+        "Export session audit (JSON)",
+        data=json.dumps(export, indent=2, default=str),
+        file_name=f"guardian_session_{session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        mime="application/json",
+        key="session_monitor_export",
+    )
+
+
 def main():
     """Main Streamlit application."""
     
     # Header
-    st.markdown("""
-    <div class="main-header">
-        <h1>Guardian AI - K2Think Security Assistant</h1>
-        <h3>Constitutional AI Defense for SOC environments</h3>
-                <h6>Protecting LLMs from prompt injection attacks in SOC environments with real-time detection,
-    side-by-side vulnerability demonstration, and comprehensive testing.</h6>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div class="g-banner">{ASCII_BANNER}</div>', unsafe_allow_html=True)
 
     # Top Menu Bar
     menu_cols = st.columns([3, 3, 3, 1])
@@ -954,7 +1583,8 @@ def main():
     if 'rules_pdf_data' not in st.session_state:
         st.session_state.rules_pdf_data = generate_pdf_report(
             "System Overview",
-            "Complete Constitutional AI framework with all 24 security rules, threat protection categories, and system metrics.",
+            "Constitutional AI framework: rules 001-034 with MITRE ATLAS mapping, "
+            "attack-class taxonomy, threat protection categories and system metrics.",
             {'blocked': False, 'rule_name': 'Documentation Export', 'severity': 'INFO', 'latency_ms': 0},
             wrapper
         )
@@ -993,10 +1623,28 @@ def main():
         
         st.info("🎬 **Demo Mode Active**: Showing realistic mockup data to showcase dashboard capabilities")
     
-    st.markdown("---")
-    
+    meta = wrapper.ruleset_meta or {}
+    st.markdown(
+        f'''<div class="g-statusline">
+  ruleset <b>v{meta.get("version", "?")}</b><span class="sep">|</span>
+  <b>{len(wrapper.rules)}</b> rules<span class="sep">|</span>
+  ATLAS <b>{meta.get("atlas_version", "n/a")}</b><span class="sep">|</span>
+  drift threshold <b>{wrapper.session_tracker.drift_threshold:.2f}</b><span class="sep">|</span>
+  embeddings <b>{wrapper.session_tracker.backend}</b><span class="sep">|</span>
+  agentic mode <b>{"on" if wrapper.agentic_context else "off"}</b><span class="sep">|</span>
+  allowlist <b>{len(wrapper.url_allowlist)}</b> domains
+</div>''',
+        unsafe_allow_html=True,
+    )
+
     # Main content area with tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["🎯 Single Input", "📤 Dataset Evaluation", "🎭 Red Team Demo", "📊 Model Performance"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "🎯 Single Input",
+        "📤 Dataset Evaluation",
+        "🎭 Red Team Demo",
+        "📊 Model Performance",
+        "🔍 Session Monitor",
+    ])
     
     # TAB 1: Single Input Analysis
     with tab1:
@@ -1005,12 +1653,32 @@ def main():
         
         st.markdown("---")
         
-        # Context selection
-        context = st.selectbox(
-            "Analysis Context",
-            ["SOC Analysis", "Log Analysis", "Phishing Triage", "Malware Explanation", "Threat Intel", "Custom"]
-        )
-        
+        # Context and session selection
+        ctx_col, sess_col = st.columns([2, 2])
+
+        with ctx_col:
+            context = st.selectbox(
+                "Analysis Context",
+                ["SOC Analysis", "Log Analysis", "Phishing Triage", "Malware Explanation", "Threat Intel", "Custom"]
+            )
+
+        with sess_col:
+            # Inputs sharing a session id share a drift window. Leave it blank
+            # and one is generated so the session still groups.
+            session_input = st.text_input(
+                "Session ID",
+                value=st.session_state.get("active_session_id", ""),
+                placeholder="blank generates a UUID",
+                help="Inputs sharing a session ID are scored against one drift window.",
+                key="single_input_session",
+            ).strip()
+
+        if not session_input:
+            session_input = st.session_state.get("generated_session_id") or f"soc-{uuid.uuid4().hex[:8]}"
+            st.session_state["generated_session_id"] = session_input
+        st.session_state["active_session_id"] = session_input
+        st.caption(f"Active session: `{session_input}`")
+
         if context == "Custom":
             context = st.text_input("Enter custom context:", "Custom Analysis")
         
@@ -1018,8 +1686,9 @@ def main():
         input_text = st.text_area(
             "Enter input to analyze:",
             height=150,
-            placeholder="Example: Analyze this suspicious log entry:\n[2025-10-23 10:15:32] ERROR - Authentication failed...",
-            help="Enter any text you want the AI to analyze. Try benign queries or injection attempts!"
+            placeholder="Example: Analyze this suspicious log entry:\n[2026-09-07 10:15:32] ERROR - Authentication failed...",
+            help="Enter any text you want the AI to analyze. Try benign queries or injection attempts!",
+            key="single_input_text",
         )
         
         # Example prompts
@@ -1045,35 +1714,32 @@ def main():
             input_text = st.session_state['input_text']
         
         # Analyze button
-        if st.button("🔍 Analyze Input", type="primary"):
+        if st.button("🔍 Analyze Input", type="primary", key="single_input_analyze"):
             if not input_text.strip():
                 st.warning("⚠️ Please enter some text to analyze.")
             else:
                 st.markdown("---")
                 
                 if display_mode == "Side-by-Side Comparison":
-                    render_comparison_columns(input_text, context, wrapper)
-                
+                    render_comparison_columns(input_text, context, wrapper, session_input)
+
                 elif display_mode == "Safe Only":
                     st.markdown("### 🛡️ Hardened Analysis (Safe Mode)")
                     with st.spinner("Analyzing with Constitutional AI protection..."):
-                        result = wrapper.analyze_safe(input_text, context)
-                        
-                        if result['blocked']:
-                            st.error(f"🛑 **BLOCKED** - {result['rule_name']}")
-                        else:
-                            st.success("✅ **SAFE** - No violations detected")
-                        
+                        result = wrapper.analyze_safe(input_text, context, session_id=session_input)
+
+                        render_verdict_strip(result, wrapper)
+
                         st.markdown(f"**Latency:** {result['latency_ms']}ms")
                         st.write(result['output'])
-                        
+
                         if show_reasoning:
                             with st.expander("🔍 View Reasoning Trace"):
                                 st.text(result['reasoning_trace'])
-                
+
                 elif display_mode == "Metrics Dashboard":
                     # Just analyze without showing output
-                    wrapper.analyze_safe(input_text, context)
+                    wrapper.analyze_safe(input_text, context, session_id=session_input)
                     st.success("✅ Analysis complete - metrics updated below")
         
         # Show metrics if enabled
@@ -2233,6 +2899,10 @@ def main():
                     st.text(result['reasoning_trace'])
             else:
                 st.warning("⚠️ Please enter some text to test")
+
+    # TAB 5: Session Monitor
+    with tab5:
+        render_session_monitor(wrapper)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,23 @@
+# Guardian-AI organizational URL allowlist
+#
+# One domain per line. Blank lines and lines starting with '#' are ignored.
+# A domain listed here also covers its subdomains: "your-org.com" matches
+# "logs.your-org.com" but not "your-org.com.evil.net".
+#
+# Any URL in a log field whose domain is NOT listed here is treated as an
+# indirect prompt injection vector (rule_031). Add your SOC platform, ticketing
+# system, threat intel feeds, and internal services.
+
+your-org.com
+soc-platform.internal
+
+# Threat intel and reputation services commonly cited in SOC log annotations.
+# Remove any your organization does not actually use.
+virustotal.com
+abuse.ch
+alienvault.com
+mitre.org
+attack.mitre.org
+atlas.mitre.org
+cisa.gov
+nvd.nist.gov
